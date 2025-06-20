@@ -1,0 +1,80 @@
+{
+    "name": "garethdaine/ai-reporter",
+    "description": "Framework-agnostic automated dev reporting via OpenAI",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^7.4 || ^8.0",
+        "symfony/console": "^7.3",
+        "psr/container": "^2.0",
+        "psr/log": "^3.0",
+        "openai-php/laravel": "^0.13.0",
+        "openai-php/client": "^0.13.0",
+        "psr/event-dispatcher": "^1.0",
+        "symfony/mailer": "^7.3",
+        "symfony/mime": "^7.3",
+        "symfony/http-client": "^7.3",
+        "laravel/prompts": "^0.3.5"
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.8",
+        "phpunit/phpunit": "^11.5",
+        "phpstan/phpstan": "^2.1",
+        "composer/composer": "^2.8",
+        "laravel/pint": "^1.22",
+        "deptrac/deptrac": "^3.0",
+        "mockery/mockery": "^1.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "AIReporter\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AIReporter\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "phpstan": "phpstan analyse --ansi",
+        "check-tools": "AIReporter\\Composer\\CheckTools::handle",
+        "post-install-cmd": [
+            "@check-tools"
+        ],
+        "copy-git-hooks": [
+            "@php -r \"is_dir('.git') && copy('./scripts/git/hooks/local/pre-commit', '.git/hooks/pre-commit');\"",
+            "if [ -d .git ]; then chmod +x .git/hooks/pre-commit; else echo 'Git hooks directory or file does not exist.'; fi",
+            "@php -r \"is_dir('.git') && copy('./scripts/git/hooks/prepare-commit-msg', '.git/hooks/prepare-commit-msg');\"",
+            "if [ -d .git ]; then chmod +x .git/hooks/prepare-commit-msg; else echo 'Git hooks directory or file does not exist.'; fi"
+        ],
+        "post-update-cmd": [
+            "@check-tools"
+        ],
+        "post-autoload-dump": [
+            "@composer run copy-git-hooks"
+        ]
+    },
+    "suggest": {
+        "openai-php/laravel": "Use the OpenAI driver in Laravel apps",
+        "illuminate/support": "Needed only for the Laravel adapter"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "AIReporter\\Laravel\\ReportingServiceProvider"
+            ]
+        }
+    },
+    "bin": [
+        "bin/report"
+    ],
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
+    }
+}

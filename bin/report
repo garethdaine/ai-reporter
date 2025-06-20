@@ -1,0 +1,101 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use AIReporter\Cli\GenerateReportCommand;
+use AIReporter\Services\{
+    ReportGenerator,
+    TemplateManager
+};
+use AIReporter\Drivers\OpenAiDriver;
+use AIReporter\Renderer\MarkdownRenderer;
+use AIReporter\Services\CommitProviders\GitCommitProvider;
+use Symfony\Component\Console\Application;
+use AIReporter\Support\SimpleEventDispatcher;
+use AIReporter\Listeners\NotifierListener;
+use AIReporter\Notifiers\SlackNotifier;
+use AIReporter\Notifiers\EmailNotifier;
+use AIReporter\Notifiers\MultiNotifier;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mailer\Transport;
+use AIReporter\Drivers\NullDriver;
+use AIReporter\Events\ReportGenerated;
+use AIReporter\Notifiers\ConfluenceNotifier;
+use Symfony\Component\HttpClient\HttpClient;
+
+/**
+ * Minimal bootstrap for non-Laravel usage.
+ * Uses environment variables for config.
+ */
+
+/* --------------------------------------------------------------------- */
+// Choose AI driver (live or offline)
+$ai = getenv('OFFLINE')
+    ? new NullDriver()
+    : new OpenAiDriver(getenv('OPENAI_API_KEY') ?: '');
+
+// Build event dispatcher and Slack notifier
+$bus = new SimpleEventDispatcher();
+
+// Build notifier collection based on env flags
+$notifiers = [];
+
+if (getenv('REPORTING_NOTIFY_SLACK') === 'true') {
+    $notifiers[] = new SlackNotifier(
+        getenv('REPORTING_SLACK_WEBHOOK') ?: '',
+        getenv('REPORTING_SLACK_CHANNEL') ?: ''
+    );
+}
+
+if (getenv('REPORTING_NOTIFY_EMAIL') === 'true') {
+    $mailer = new Mailer(Transport::fromDsn(getenv('REPORTING_MAIL_DSN')));
+    $notifiers[] = new EmailNotifier(
+        $mailer,
+        getenv('REPORTING_MAIL_FROM') ?: 'noreply@localhost',
+        explode(',', getenv('REPORTING_MAIL_TO') ?: '')
+    );
+}
+
+if (getenv('REPORTING_NOTIFY_CONFLUENCE') === 'true') {
+    $notifiers[] = new ConfluenceNotifier(
+        baseUrl:        getenv('REPORTING_CONFLUENCE_BASE_URL'),
+        email:          getenv('REPORTING_CONFLUENCE_EMAIL'),
+        apiToken:       getenv('REPORTING_CONFLUENCE_API_TOKEN'),
+        spaceKey:       getenv('REPORTING_CONFLUENCE_SPACE_KEY'),
+        parentPageId:   getenv('REPORTING_CONFLUENCE_PARENT_PAGE_ID'),
+        labels:         getenv('REPORTING_CONFLUENCE_LABELS') ? explode(',', getenv('REPORTING_CONFLUENCE_LABELS')) : [],
+        http:           HttpClient::create(),
+    );
+}
+
+$multiNotifier = new MultiNotifier($notifiers);
+
+$bus->listen(
+    ReportGenerated::class,
+    new NotifierListener($multiNotifier)
+);
+
+/* --------------------------------------------------------------------- */
+/* 1. Build dependencies manually                                        */
+/* --------------------------------------------------------------------- */
+
+$templates = new TemplateManager(
+    __DIR__ . '/../stubs',                           // default stub dir
+    __DIR__ . '/../reports'                          // default output dir
+);
+
+$commits   = new GitCommitProvider();
+$renderer  = new MarkdownRenderer();
+
+$reports   = new ReportGenerator($ai, $templates, $commits, $renderer, $bus);
+
+/* --------------------------------------------------------------------- */
+/* 2. Wire console app                                                   */
+/* --------------------------------------------------------------------- */
+$app = new Application('AI Reporter', '1.0.0');
+$app->add(new GenerateReportCommand($reports));
+$app->setDefaultCommand('report:generate', true);    // so "report" runs default
+$app->run();

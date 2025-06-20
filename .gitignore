@@ -1,0 +1,38 @@
+# Standard .gitignore for framework agnostic PHP packages with a Laravel provider
+# This file is used to ignore files and directories that should not be tracked by Git.
+
+# Ignore the vendor directory
+/vendor/
+# Ignore the node_modules directory
+/node_modules/
+# Ignore the .env file
+.env
+# Ignore the .env.example file
+.env.example
+# Ignore the .DS_Store file (macOS)
+.DS_Store
+# Ignore the .vscode directory (Visual Studio Code)
+.vscode/
+# Ignore the .idea directory (JetBrains IDEs)
+.idea/
+# Ignore the composer.lock file (if you want to regenerate it)
+# composer.lock
+# Ignore the package-lock.json file (if you want to regenerate it)
+# package-lock.json
+# Ignore the yarn.lock file (if you want to regenerate it)
+# yarn.lock
+# Ignore the .phpunit.result.cache file (PHPUnit cache)
+.phpunit.result.cache
+# Ignore the coverage directory (PHPUnit code coverage)
+/coverage/
+# Ignore the storage directory (Laravel specific)
+/storage/
+# Ignore the bootstrap/cache directory (Laravel specific)
+/bootstrap/cache/
+# Ignore the tests directory (if you want to keep it clean)
+# /tests/
+# Ignore tmp-reports directory
+/tmp-reports/
+# Ignore Deptrac files
+deptrac.yaml
+.deptrac.cache
