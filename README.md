@@ -39,50 +39,6 @@ _Fully-automated dev-progress reporting for mono-repo & micro-service projects_
 ## Installation
 
 ```bash
-composer require acme/ai-reporter         # core package
-composer require --dev laravel/pint phpstan/phpstan pestphp/pest
-
-# AI Reporter
-
-_Fully-automated dev-progress reporting for mono-repo & micro-service projects_
-
-* Generates **weekly** and **monthly** Markdown reports from Git commits + directory snapshots
-* Summarises the work with **OpenAI (GPT-4o-mini)** or **NullDriver** for offline mode
-* Publishes reports to **Slack, Email, Confluence** (pluggable notifier system)
-* Works **framework-agnostically** via a CLI, with first-class **Laravel** integration
-* Ships with Pint + PHPStan + Pest and a pre-commit hook for zero-regression commits
-
----
-
-## Table of Contents
-1. [Requirements](#requirements)
-2. [Installation](#installation)
-3. [Quick Start](#quick-start)
-4. [Configuration](#configuration)
-5. [CLI Usage](#cli-usage)
-6. [Laravel Usage](#laravel-usage)
-7. [Notifications](#notifications)
-8. [Developer Guide](#developer-guide)
-9. [Testing](#testing)
-10. [Contributing](#contributing)
-11. [License](#license)
-
----
-
-## Requirements
-| Tool / Library | Version |
-|----------------|---------|
-| PHP            | **^8.2** |
-| Composer       | 2.x     |
-| Git            | installed |
-| tree (command) | optional (automatically falls back) |
-| OpenAI account | only if you use `OpenAiDriver` |
-
----
-
-## Installation
-
-```bash
 composer require garethdaine/ai-reporter         # core package
 composer require --dev laravel/pint phpstan/phpstan pestphp/pest
 ```
